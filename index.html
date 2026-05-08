@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0B1929">
+  <meta name="description" content="EasyCalc - Accessible calculator for everyone. Voice input, large buttons, high contrast themes.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="EasyCalc">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+  <title>EasyCalc</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { 
+      height: 100%; width: 100%; overflow: hidden;
+      font-family: 'Atkinson Hyperlegible', 'Verdana', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    body { display: flex; justify-content: center; }
+    #app { width: 100%; max-width: 500px; height: 100vh; display: flex; flex-direction: column; transition: background 0.3s; }
+
+    /* Header */
+    .header { padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid; transition: all 0.3s; }
+    .header h1 { font-size: 1.4rem; font-weight: 800; }
+    .header button { font-size: 1.3rem; cursor: pointer; border-radius: 12px; padding: 8px 14px; font-family: inherit; border: 2px solid; }
+
+    /* Display */
+    .display-wrap { margin: 10px 12px; border-radius: 20px; padding: 16px 20px; border: 3px solid; min-height: 100px; display: flex; flex-direction: column; justify-content: flex-end; transition: all 0.3s; }
+    .history { opacity: 0.5; text-align: right; min-height: 1.4em; font-weight: 600; }
+    .display-main { font-weight: 800; text-align: right; letter-spacing: 0.02em; word-break: break-all; line-height: 1.2; transition: font-size 0.15s ease; }
+    .voice-status { font-size: 0.9rem; text-align: center; margin-top: 6px; font-weight: 700; }
+    .voice-status.listening { animation: pulse 1.5s infinite; }
+
+    /* Input bar */
+    .input-bar { padding: 0 12px 4px; display: flex; gap: 8px; align-items: stretch; }
+    .input-wrap { flex: 1; display: flex; align-items: center; border-radius: 14px; border: 3px solid; overflow: hidden; transition: all 0.3s; }
+    .input-wrap input { flex: 1; border: none; outline: none; background: transparent; font-weight: 600; font-family: 'Atkinson Hyperlegible', 'Verdana', sans-serif; padding: 14px 16px; min-width: 0; }
+    .go-btn { border: none; font-size: 1.1rem; font-weight: 800; cursor: pointer; padding: 14px 18px; font-family: inherit; display: none; }
+    .go-btn.show { display: block; }
+    .mic-btn { display: flex; align-items: center; justify-content: center; width: 58px; font-size: 1.5rem; color: #FFF; border: 3px solid; border-radius: 14px; cursor: pointer; outline: none; transition: all 0.2s ease; touch-action: manipulation; }
+
+    /* Help */
+    .help-toggle { padding: 0 12px 2px; text-align: center; }
+    .help-toggle button { background: none; border: none; font-size: 0.82rem; cursor: pointer; font-family: inherit; font-weight: 600; opacity: 0.8; text-decoration: underline; }
+    .help-box { border-radius: 12px; padding: 10px 14px; margin-top: 4px; font-size: 0.82rem; text-align: left; line-height: 1.7; border: 2px solid; display: none; }
+    .help-box.show { display: block; }
+
+    /* Button grid */
+    .btn-grid { flex: 1; display: flex; flex-direction: column; gap: 7px; padding: 6px 12px 12px; }
+    .btn-row { display: flex; gap: 7px; flex: 1; }
+    .calc-btn { flex: 1; display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: 'Atkinson Hyperlegible', 'Verdana', sans-serif; border-radius: 16px; cursor: pointer; transition: all 0.12s ease; outline: none; box-shadow: 0 2px 8px rgba(0,0,0,0.2); border: 3px solid; touch-action: manipulation; }
+    .calc-btn:active { transform: scale(0.95); }
+
+    .footer { text-align: center; padding: 6px; opacity: 0.35; font-size: 0.75rem; }
+
+    /* Settings page */
+    .settings { min-height: 100vh; font-family: 'Atkinson Hyperlegible', 'Verdana', sans-serif; display: none; overflow-y: auto; }
+    .settings.show { display: block; }
+    .calc-main { display: flex; flex-direction: column; height: 100vh; }
+    .calc-main.hide { display: none; }
+    .settings-header { padding: 16px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 2px solid; }
+    .settings-header button { background: none; border: 2px solid; font-size: 1.5rem; cursor: pointer; border-radius: 12px; padding: 8px 16px; font-family: inherit; }
+    .settings-header h1 { font-size: 1.6rem; font-weight: 800; }
+    .settings-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; max-width: 500px; margin: 0 auto; }
+    .settings-card { border-radius: 16px; padding: 20px; border: 2px solid; }
+    .settings-row { display: flex; justify-content: space-between; align-items: center; }
+    .settings-label { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+    .settings-desc { font-size: 0.9rem; opacity: 0.7; }
+    .toggle { width: 60px; height: 32px; border-radius: 16px; position: relative; cursor: pointer; transition: all 0.2s; flex-shrink: 0; border: 2px solid; }
+    .toggle-knob { width: 24px; height: 24px; border-radius: 50%; position: absolute; top: 2px; transition: all 0.2s; }
+    .size-btns { display: flex; gap: 8px; margin-top: 12px; }
+    .size-btn { flex: 1; padding: 14px 8px; border-radius: 12px; border: 3px solid; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .theme-btn { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; border: 3px solid; font-size: 1.1rem; font-weight: 600; cursor: pointer; font-family: inherit; text-align: left; width: 100%; }
+    .theme-preview { width: 36px; height: 36px; border-radius: 8px; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script src="js/app.js"></script>
+</body>
+</html>
