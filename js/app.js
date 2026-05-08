@@ -97,17 +97,55 @@ function parseTokens(raw) {
   for (let i = 0; i < words.length; i++) {
     let word = words[i].replace(/[^a-z0-9.+\-*/=%]/g, "");
     if (!word) continue;
+
+    // Handle negative numbers: "-6" as a single token
+    if (/^-\d+\.?\d*$/.test(word)) { tokens.push(word); continue; }
+
     if (word === "*") { tokens.push("×"); continue; }
     if (word === "/") { tokens.push("÷"); continue; }
-    if (word === "+") { tokens.push("+"); continue; }
-    if (word === "-") { tokens.push("-"); continue; }
     if (word === "=") { tokens.push("="); continue; }
     if (word === "%") { tokens.push("%"); continue; }
+
+    // For + and -, check if it's a negative sign or an operator
+    // It's a negative sign if: previous token is an operator (or no tokens yet with context)
+    if (word === "-") {
+      const lastToken = tokens.length > 0 ? tokens[tokens.length - 1] : null;
+      const isAfterOperator = lastToken && ["+", "-", "×", "÷"].includes(lastToken);
+      // Peek ahead: is the next word a number?
+      const nextWord = i + 1 < words.length ? words[i + 1].replace(/[^a-z0-9.]/g, "") : "";
+      const nextIsNumber = /^\d+\.?\d*$/.test(nextWord) || VOICE_MAP[nextWord] && /^\d+$/.test(VOICE_MAP[nextWord]);
+
+      if (isAfterOperator && nextIsNumber) {
+        // It's a negative sign — combine with next number
+        i++;
+        const num = VOICE_MAP[nextWord] || nextWord;
+        tokens.push("-" + num);
+        continue;
+      }
+      // Also handle "negative" keyword
+      tokens.push("-"); continue;
+    }
+    if (word === "+") { tokens.push("+"); continue; }
+
     if (word === "x" && tokens.length > 0) { tokens.push("×"); continue; }
     // Handle "per cent" / "per-cent" as two words
     if (word === "per" && i + 1 < words.length) {
       const next = words[i + 1].replace(/[^a-z]/g, "");
       if (next === "cent" || next === "sent") { tokens.push("%"); i++; continue; }
+    }
+    // Handle "negative five" → "-5"
+    if (word === "negative" && i + 1 < words.length) {
+      const next = words[i + 1].replace(/[^a-z0-9.]/g, "");
+      const num = VOICE_MAP[next] || (/^\d+\.?\d*$/.test(next) ? next : null);
+      if (num) { tokens.push("-" + num); i++; continue; }
+    }
+    // Handle "minus" as negative when after an operator
+    if (word === "minus" && i + 1 < words.length) {
+      const lastToken = tokens.length > 0 ? tokens[tokens.length - 1] : null;
+      const isAfterOperator = lastToken && ["+", "-", "×", "÷"].includes(lastToken);
+      const next = words[i + 1].replace(/[^a-z0-9.]/g, "");
+      const num = VOICE_MAP[next] || (/^\d+\.?\d*$/.test(next) ? next : null);
+      if (isAfterOperator && num) { tokens.push("-" + num); i++; continue; }
     }
     if (COMPOUND_TENS[word] && i + 1 < words.length) {
       const next = words[i + 1].replace(/[^a-z]/g, "");
@@ -228,7 +266,8 @@ function handleNumber(num) {
     state.resetNext = false;
     state.display = num === "." ? "0." : num;
   } else {
-    if (state.display === "0" && num !== ".") state.display = num;
+    if (state.display === "-0") state.display = "-" + num;
+    else if (state.display === "0" && num !== ".") state.display = num;
     else if (num === "." && state.display.includes(".")) return;
     else state.display += num;
   }
@@ -286,7 +325,15 @@ function handleBackspace() {
 
 function handlePlusMinus() {
   vibrate();
-  state.display = state.display.startsWith("-") ? state.display.slice(1) : `-${state.display}`;
+  if (state.resetNext) {
+    // After an operator, start fresh with negative zero
+    state.resetNext = false;
+    state.display = "-0";
+  } else if (state.display === "-0") {
+    state.display = "0";
+  } else {
+    state.display = state.display.startsWith("-") ? state.display.slice(1) : `-${state.display}`;
+  }
   speak(state.display.startsWith("-") ? "negative" : "positive");
   render();
 }
@@ -317,7 +364,7 @@ function processNaturalInput(raw) {
   }
   const hasOp = tokens.some(t => ["+","-","×","÷"].includes(t));
   const last = tokens[tokens.length - 1];
-  const endsWithNumber = /^\d+\.?\d*$/.test(last);
+  const endsWithNumber = /^-?\d+\.?\d*$/.test(last);
   const endsWithPercent = last === "%";
   if (hasOp && (endsWithNumber || endsWithPercent) && !tokens.includes("=")) tokens.push("=");
 
@@ -330,9 +377,10 @@ function processNaturalInput(raw) {
   showStatus(`Got it: ${tokens.join(" ")}`);
 
   for (const token of tokens) {
-    if (/^\d+\.?\d*$/.test(token)) {
-      if (token.length === 1) {
-        // Inline handleNumber logic (no render per step)
+    if (/^-?\d+\.?\d*$/.test(token)) {
+      const isNegSingleDigit = token.startsWith("-") && token.length === 2;
+      const isSingleDigit = !token.startsWith("-") && token.length === 1;
+      if (isSingleDigit) {
         if (state.resetNext) { state.resetNext = false; state.display = token === "." ? "0." : token; }
         else if (state.display === "0" && token !== ".") state.display = token;
         else if (token === "." && state.display.includes(".")) {}
