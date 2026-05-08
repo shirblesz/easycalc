@@ -1,4 +1,4 @@
-const CACHE_NAME = 'easycalc-v1';
+const CACHE_NAME = 'easycalc-v2';
 const urlsToCache = [
   '/',
   '/index.html',
