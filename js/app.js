@@ -95,8 +95,8 @@ function parseTokens(raw) {
   // Pre-process: split math expressions without spaces like "8*2.6" or "45+30" or "10/2.5"
   // Insert spaces around operators so they get split properly
   let processed = raw.toLowerCase().trim()
-    .replace(/([0-9.])([+\-*/×÷=])/g, "$1 $2 ")
-    .replace(/([+\-*/×÷=])([0-9.])/g, " $1 $2")
+    .replace(/([0-9.])([x+\-*/×÷=])/g, "$1 $2 ")
+    .replace(/([x+\-*/×÷=])([0-9.])/g, " $1 $2")
     .replace(/(%)/g, " $1 ");
   
   const words = processed.split(/[\s,]+/).filter(w => w.length > 0);
