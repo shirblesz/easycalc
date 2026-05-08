@@ -107,28 +107,23 @@ function parseTokens(raw) {
     if (word === "%") { tokens.push("%"); continue; }
 
     // For + and -, check if it's a negative sign or an operator
-    // It's a negative sign if: previous token is an operator (or no tokens yet with context)
     if (word === "-") {
       const lastToken = tokens.length > 0 ? tokens[tokens.length - 1] : null;
       const isAfterOperator = lastToken && ["+", "-", "×", "÷"].includes(lastToken);
-      // Peek ahead: is the next word a number?
       const nextWord = i + 1 < words.length ? words[i + 1].replace(/[^a-z0-9.]/g, "") : "";
-      const nextIsNumber = /^\d+\.?\d*$/.test(nextWord) || VOICE_MAP[nextWord] && /^\d+$/.test(VOICE_MAP[nextWord]);
-
+      const nextIsNumber = /^\d+\.?\d*$/.test(nextWord) || (VOICE_MAP[nextWord] && /^\d+$/.test(VOICE_MAP[nextWord]));
       if (isAfterOperator && nextIsNumber) {
-        // It's a negative sign — combine with next number
         i++;
         const num = VOICE_MAP[nextWord] || nextWord;
         tokens.push("-" + num);
         continue;
       }
-      // Also handle "negative" keyword
       tokens.push("-"); continue;
     }
     if (word === "+") { tokens.push("+"); continue; }
 
     if (word === "x" && tokens.length > 0) { tokens.push("×"); continue; }
-    // Handle "per cent" / "per-cent" as two words
+    // Handle "per cent" as two words
     if (word === "per" && i + 1 < words.length) {
       const next = words[i + 1].replace(/[^a-z]/g, "");
       if (next === "cent" || next === "sent") { tokens.push("%"); i++; continue; }
@@ -147,11 +142,34 @@ function parseTokens(raw) {
       const num = VOICE_MAP[next] || (/^\d+\.?\d*$/.test(next) ? next : null);
       if (isAfterOperator && num) { tokens.push("-" + num); i++; continue; }
     }
+
+    // Handle "point/dot/decimal" — merge with surrounding numbers: "3 point 5" → "3.5"
+    if (word === "point" || word === "dot" || word === "decimal" || word === ".") {
+      const lastToken = tokens.length > 0 ? tokens[tokens.length - 1] : null;
+      const lastIsNumber = lastToken && /^-?\d+$/.test(lastToken);
+      // Peek ahead for the decimal part
+      const nextWord = i + 1 < words.length ? words[i + 1].replace(/[^a-z0-9]/g, "") : "";
+      const nextNum = VOICE_MAP[nextWord] || (/^\d+$/.test(nextWord) ? nextWord : null);
+
+      if (lastIsNumber && nextNum) {
+        // Merge: "3" + "." + "5" → "3.5"
+        tokens[tokens.length - 1] = lastToken + "." + nextNum;
+        i++;
+        continue;
+      } else if (lastIsNumber) {
+        // "3 point" with no number after → just append dot
+        tokens[tokens.length - 1] = lastToken + ".";
+        continue;
+      }
+      // Standalone dot
+      tokens.push(".");
+      continue;
+    }
+
     if (COMPOUND_TENS[word] && i + 1 < words.length) {
       const next = words[i + 1].replace(/[^a-z]/g, "");
       if (SINGLE_DIGITS[next]) { tokens.push(String(COMPOUND_TENS[word] + SINGLE_DIGITS[next])); i++; continue; }
     }
-    // Handle "50% off" style - strip % from numbers like "50%"
     if (/^\d+%$/.test(word)) { tokens.push(word.replace("%", "")); tokens.push("%"); continue; }
     if (["by","the","is","what","whats","what's","calculate","please","can","you","of","off"].includes(word)) continue;
     if (VOICE_MAP[word]) { tokens.push(VOICE_MAP[word]); continue; }
@@ -410,6 +428,10 @@ function processNaturalInput(raw) {
     else if (token === "C") { state.display = "0"; state.prevValue = null; state.operator = null; state.resetNext = false; state.history = ""; }
     else if (token === "⌫") { state.display = state.display.length > 1 ? state.display.slice(0, -1) : "0"; }
     else if (token === "%") { state.display = formatResult(parseFloat(state.display) / 100); }
+    else if (token === ".") {
+      if (state.resetNext) { state.resetNext = false; state.display = "0."; }
+      else if (!state.display.includes(".")) state.display += ".";
+    }
   }
   render();
 }
