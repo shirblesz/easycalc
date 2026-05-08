@@ -92,11 +92,20 @@ const COMPOUND_TENS = { twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:7
 const SINGLE_DIGITS = { one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9 };
 
 function parseTokens(raw) {
-  // Pre-process: split math expressions without spaces like "8*2.6" or "45+30" or "10/2.5"
-  // Insert spaces around operators so they get split properly
-  let processed = raw.toLowerCase().trim()
-    .replace(/([0-9.])([x+\-*/×÷=])/g, "$1 $2 ")
-    .replace(/([x+\-*/×÷=])([0-9.])/g, " $1 $2")
+  // Normalize all possible operator characters to standard ones FIRST
+  let processed = raw
+    .replace(/[×✕✖⨉⨯]/g, "*")    // all multiplication symbols → *
+    .replace(/[÷➗⁄∕]/g, "/")      // all division symbols → /
+    .replace(/[−–—]/g, "-")        // all dash/minus variants → -
+    .replace(/[＋]/g, "+")          // fullwidth plus → +
+    .replace(/[＝]/g, "=")          // fullwidth equals → =
+    .replace(/[％]/g, "%")          // fullwidth percent → %
+    .toLowerCase().trim();
+
+  // Insert spaces around operators so "8*2.6" becomes "8 * 2.6"
+  processed = processed
+    .replace(/([0-9.])([x+\-*/=])/g, "$1 $2 ")
+    .replace(/([x+\-*/=])([0-9.])/g, " $1 $2")
     .replace(/(%)/g, " $1 ");
   
   const words = processed.split(/[\s,]+/).filter(w => w.length > 0);
