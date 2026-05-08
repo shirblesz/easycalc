@@ -530,9 +530,9 @@ function renderCalc(t, fs, mh) {
 
   const micBtn = state.micSupported ? `
     <button class="mic-btn" id="micBtn" aria-label="${state.isListening ? 'Stop' : 'Voice input'}"
-      style="background:${state.isListening ? t.micActive : t.micInactive};border-color:${state.isListening ? t.micActive : t.micInactive};
-      ${state.isListening ? `box-shadow:0 0 0 5px ${t.micActive}44` : ''}">
-      ${state.isListening ? "⏹️" : "🎤"}
+      style="background:${state.isListening ? '#00C853' : t.micInactive};border-color:${state.isListening ? '#00C853' : t.micInactive};
+      ${state.isListening ? `box-shadow:0 0 0 6px rgba(0,200,83,0.3);animation:micPulse 1.5s infinite` : ''}">
+      🎤
     </button>` : "";
 
   return `
