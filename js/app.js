@@ -95,19 +95,27 @@ function parseTokens(raw) {
   const words = raw.toLowerCase().trim().split(/[\s,]+/);
   const tokens = [];
   for (let i = 0; i < words.length; i++) {
-    let word = words[i].replace(/[^a-z0-9.+\-*/=]/g, "");
+    let word = words[i].replace(/[^a-z0-9.+\-*/=%]/g, "");
     if (!word) continue;
     if (word === "*") { tokens.push("×"); continue; }
     if (word === "/") { tokens.push("÷"); continue; }
     if (word === "+") { tokens.push("+"); continue; }
     if (word === "-") { tokens.push("-"); continue; }
     if (word === "=") { tokens.push("="); continue; }
+    if (word === "%") { tokens.push("%"); continue; }
     if (word === "x" && tokens.length > 0) { tokens.push("×"); continue; }
+    // Handle "per cent" / "per-cent" as two words
+    if (word === "per" && i + 1 < words.length) {
+      const next = words[i + 1].replace(/[^a-z]/g, "");
+      if (next === "cent" || next === "sent") { tokens.push("%"); i++; continue; }
+    }
     if (COMPOUND_TENS[word] && i + 1 < words.length) {
       const next = words[i + 1].replace(/[^a-z]/g, "");
       if (SINGLE_DIGITS[next]) { tokens.push(String(COMPOUND_TENS[word] + SINGLE_DIGITS[next])); i++; continue; }
     }
-    if (["by","the","is","what","whats","what's","calculate","please","can","you"].includes(word)) continue;
+    // Handle "50% off" style - strip % from numbers like "50%"
+    if (/^\d+%$/.test(word)) { tokens.push(word.replace("%", "")); tokens.push("%"); continue; }
+    if (["by","the","is","what","whats","what's","calculate","please","can","you","of","off"].includes(word)) continue;
     if (VOICE_MAP[word]) { tokens.push(VOICE_MAP[word]); continue; }
     if (/^\d+\.?\d*$/.test(word)) { tokens.push(word); continue; }
   }
@@ -351,6 +359,7 @@ function processNaturalInput(raw) {
     }
     else if (token === "C") { state.display = "0"; state.prevValue = null; state.operator = null; state.resetNext = false; state.history = ""; }
     else if (token === "⌫") { state.display = state.display.length > 1 ? state.display.slice(0, -1) : "0"; }
+    else if (token === "%") { state.display = formatResult(parseFloat(state.display) / 100); }
   }
   render();
 }
