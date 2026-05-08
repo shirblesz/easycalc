@@ -92,7 +92,14 @@ const COMPOUND_TENS = { twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:7
 const SINGLE_DIGITS = { one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9 };
 
 function parseTokens(raw) {
-  const words = raw.toLowerCase().trim().split(/[\s,]+/);
+  // Pre-process: split math expressions without spaces like "8*2.6" or "45+30" or "10/2.5"
+  // Insert spaces around operators so they get split properly
+  let processed = raw.toLowerCase().trim()
+    .replace(/([0-9.])([+\-*/×÷=])/g, "$1 $2 ")
+    .replace(/([+\-*/×÷=])([0-9.])/g, " $1 $2")
+    .replace(/(%)/g, " $1 ");
+  
+  const words = processed.split(/[\s,]+/).filter(w => w.length > 0);
   const tokens = [];
   for (let i = 0; i < words.length; i++) {
     let word = words[i].replace(/[^a-z0-9.+\-*/=%]/g, "");
