@@ -317,7 +317,9 @@ function processNaturalInput(raw) {
   }
   const hasOp = tokens.some(t => ["+","-","×","÷"].includes(t));
   const last = tokens[tokens.length - 1];
-  if (hasOp && /^\d+\.?\d*$/.test(last) && !tokens.includes("=")) tokens.push("=");
+  const endsWithNumber = /^\d+\.?\d*$/.test(last);
+  const endsWithPercent = last === "%";
+  if (hasOp && (endsWithNumber || endsWithPercent) && !tokens.includes("=")) tokens.push("=");
 
   const startsWithOp = ["+","-","×","÷"].includes(tokens[0]);
   if (!startsWithOp) {
