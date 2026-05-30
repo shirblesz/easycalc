@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "io.github.shirblesz.twa",
-        "sha256_cert_fingerprints": ["7E:2A:AA:24:23:8F:99:2A:9A:AE:5A:DA:4F:82:3A:BD:3D:E7:1A:24:45:D3:66:A2:B9:25:AF:DF:EF:E9:25:F6"]
+        "sha256_cert_fingerprints": ["28:AE:00:69:AC:A3:F4:3A:46:E4:A3:1C:73:F9:E6:B0:14:BB:81:67:C6:BC:3B:CD:72:ED:60:C3:0F:A0:13:44"]
       }
     }]
