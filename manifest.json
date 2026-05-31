@@ -5,8 +5,8 @@
   "start_url": "/index.html",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0B1929",
-  "theme_color": "#0B1929",
+  "background_color": "#1D4ED8",
+  "theme_color": "#1D4ED8",
   "categories": ["utilities", "productivity"],
   "icons": [
     {
@@ -56,15 +56,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "icons/screenshot-1.png",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "EasyCalc main screen"
     }
   ]
 }
