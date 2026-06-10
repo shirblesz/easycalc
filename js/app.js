@@ -210,7 +210,6 @@ let state = {
   micSupported: false,
   textInput: "",
   showInputHelp: false,
-  showUpgradePrompt: false,
 };
 
 // Load saved preferences
@@ -221,9 +220,6 @@ try {
     state.voiceEnabled = saved.voiceEnabled ?? state.voiceEnabled;
     state.vibrationEnabled = saved.vibrationEnabled ?? state.vibrationEnabled;
     state.themeKey = saved.themeKey ?? state.themeKey;
-    // If premium theme saved but not premium, reset to free theme
-      state.themeKey = "midnight";
-    }
   }
 } catch(e) {}
 
@@ -235,8 +231,6 @@ function savePrefs() {
     }));
   } catch(e) {}
 }
-
-// ===== HELPERS =====
 
 // ===== HELPERS =====
 const FONT_SIZES = [
@@ -760,12 +754,6 @@ function bindSettingsEvents() {
   document.querySelectorAll(".theme-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const key = btn.dataset.theme;
-        // Show upgrade prompt
-        vibrate(50);
-        showStatus("Unlock premium to use this theme!");
-        // Scroll to unlock button
-        return;
-      }
       vibrate(); state.themeKey = key; savePrefs(); render();
     });
   });
