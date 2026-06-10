@@ -1,8 +1,5 @@
-// ========== EasyCalc - Accessible Calculator PWA ==========
+// ========== TalkCalc - Accessible Calculator PWA ==========
 
-const FREE_THEMES = ["midnight", "highContrast"];
-const PREMIUM_THEMES = ["rosewood", "forest", "lavender"];
-const IAP_PRODUCT_ID = "unlock_full_app";
 const THEMES = {
   midnight: {
     name: "Midnight Blue", emoji: "🌙",
@@ -213,7 +210,6 @@ let state = {
   micSupported: false,
   textInput: "",
   showInputHelp: false,
-  isPremium: false,
   showUpgradePrompt: false,
 };
 
@@ -225,9 +221,7 @@ try {
     state.voiceEnabled = saved.voiceEnabled ?? state.voiceEnabled;
     state.vibrationEnabled = saved.vibrationEnabled ?? state.vibrationEnabled;
     state.themeKey = saved.themeKey ?? state.themeKey;
-    state.isPremium = saved.isPremium ?? false;
     // If premium theme saved but not premium, reset to free theme
-    if (!state.isPremium && PREMIUM_THEMES.includes(state.themeKey)) {
       state.themeKey = "midnight";
     }
   }
@@ -238,90 +232,11 @@ function savePrefs() {
     localStorage.setItem("easycalc_prefs", JSON.stringify({
       fontSize: state.fontSize, voiceEnabled: state.voiceEnabled,
       vibrationEnabled: state.vibrationEnabled, themeKey: state.themeKey,
-      isPremium: state.isPremium,
     }));
   } catch(e) {}
 }
 
-// ===== IN-APP PURCHASE =====
-async function purchasePremium() {
-  vibrate(50);
-  // Check if Digital Goods API is available (Android TWA)
-  if (!window.getDigitalGoodsService) {
-    // Fallback for non-TWA environments (browser/testing)
-    // Show a message that purchase is only available in the Android app
-    state.voiceStatus = "Purchase available in Android app only";
-    showStatus("Purchase available in Android app only");
-    return;
-  }
-
-  try {
-    const service = await window.getDigitalGoodsService("https://play.google.com/billing");
-    const details = await service.getDetails([IAP_PRODUCT_ID]);
-
-    if (!details || details.length === 0) {
-      showStatus("Product not found. Try again later.");
-      return;
-    }
-
-    // Start the purchase using Payment Request API
-    const paymentMethod = {
-      supportedMethods: "https://play.google.com/billing",
-      data: { sku: IAP_PRODUCT_ID }
-    };
-
-    const request = new PaymentRequest([paymentMethod], {
-      total: { label: "Unlock Full EasyCalc", amount: { currency: "USD", value: "1.99" } }
-    });
-
-    const response = await request.show();
-    const { purchaseToken } = response.details;
-
-    // Acknowledge the purchase
-    await service.acknowledge(purchaseToken, "onetime");
-    await response.complete("success");
-
-    // Unlock premium!
-    state.isPremium = true;
-    savePrefs();
-    speak("Thank you! All themes are now unlocked!");
-    showStatus("All themes unlocked! Thank you! 🎉");
-    render();
-
-  } catch(err) {
-    if (err.name === "AbortError") {
-      // User cancelled
-      showStatus("Purchase cancelled");
-    } else {
-      console.error("Purchase error:", err);
-      showStatus("Purchase failed. Try again.");
-    }
-  }
-}
-
-async function restorePurchase() {
-  vibrate(30);
-  if (!window.getDigitalGoodsService) {
-    showStatus("Restore available in Android app only");
-    return;
-  }
-  try {
-    const service = await window.getDigitalGoodsService("https://play.google.com/billing");
-    const purchases = await service.listPurchases();
-    const hasPremium = purchases.some(p => p.itemId === IAP_PRODUCT_ID);
-    if (hasPremium) {
-      state.isPremium = true;
-      savePrefs();
-      speak("Purchase restored! All themes unlocked!");
-      showStatus("Purchase restored! 🎉");
-      render();
-    } else {
-      showStatus("No previous purchase found.");
-    }
-  } catch(err) {
-    showStatus("Restore failed. Try again.");
-  }
-}
+// ===== HELPERS =====
 
 // ===== HELPERS =====
 const FONT_SIZES = [
@@ -679,25 +594,31 @@ function renderCalc(t, fs, mh) {
 }
 
 function renderSettings(t, fs) {
+  // All themes are free for now
   const themeButtons = Object.entries(THEMES).map(([key, th]) => {
-    const isPremiumTheme = PREMIUM_THEMES.includes(key);
-    const isLocked = isPremiumTheme && !state.isPremium;
     const isSelected = state.themeKey === key;
     return `
     <button class="theme-btn" data-theme="${key}"
       style="border-color:${isSelected ? t.accent : t.btnBorder};
-      background:${isSelected ? t.accent + '22' : 'transparent'};color:${t.btnText};
-      opacity:${isLocked ? '0.7' : '1'}">
-      <div class="theme-preview" style="background:${th.bg};border-color:${th.accent}">${isLocked ? '🔒' : th.emoji}</div>
-      ${th.name}${isSelected ? ' ✓' : ''}${isLocked ? ' — Premium' : ''}
+      background:${isSelected ? t.accent + '22' : 'transparent'};color:${t.btnText}">
+      <div class="theme-preview" style="background:${th.bg};border-color:${th.accent}">${th.emoji}</div>
+      ${th.name}${isSelected ? ' ✓' : ''}
     </button>`;
   }).join("");
 
+  // Fixed font size for buttons so they stay equal size
+  const sizeLabels = ["A", "A", "A"];
+  const sizeFontSizes = ["1.0rem", "1.3rem", "1.6rem"];
   const sizeButtons = FONT_SIZES.map((s, i) => `
     <button class="size-btn" data-size="${i}"
       style="border-color:${state.fontSize === i ? t.accent : t.btnBorder};
       background:${state.fontSize === i ? t.accent : 'transparent'};
-      color:${state.fontSize === i ? t.bg : t.btnText};font-size:${s.btn}rem">${s.label}</button>`).join("");
+      color:${state.fontSize === i ? t.bg : t.btnText};
+      font-size:${sizeFontSizes[i]};
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <span style="font-size:${sizeFontSizes[i]};font-weight:800">A</span>
+      <span style="font-size:0.75rem;font-weight:600;opacity:0.8">${s.label}</span>
+    </button>`).join("");
 
   return `
     <div class="settings show" style="background:${t.settingsBg};color:${t.headerText}">
@@ -736,20 +657,6 @@ function renderSettings(t, fs) {
         </div>
         <div class="settings-card" style="background:${t.btnBg};border-color:${t.btnBorder}">
           <div class="settings-label" style="margin-bottom:12px">🎨 Color Theme</div>
-          ${!state.isPremium ? `
-          <div style="background:${t.accent}22;border:2px solid ${t.accent};border-radius:12px;padding:14px;margin-bottom:12px;text-align:center">
-            <div style="font-size:1.1rem;font-weight:700;color:${t.accent};margin-bottom:6px">🔓 Unlock All Themes</div>
-            <div style="font-size:0.9rem;opacity:0.8;margin-bottom:10px">Get Rosewood, Forest & Lavender themes</div>
-            <button id="unlockBtn" style="background:${t.accent};color:${t.bg};border:none;border-radius:10px;padding:10px 24px;font-size:1rem;font-weight:800;cursor:pointer;font-family:inherit;width:100%">
-              Unlock for $1.99 (one-time)
-            </button>
-            <button id="restoreBtn" style="background:transparent;color:${t.accent};border:none;font-size:0.8rem;cursor:pointer;font-family:inherit;margin-top:8px;text-decoration:underline">
-              Restore previous purchase
-            </button>
-          </div>` : `
-          <div style="background:${t.accent}22;border:2px solid ${t.accent};border-radius:12px;padding:12px;margin-bottom:12px;text-align:center">
-            <div style="font-size:1rem;font-weight:700;color:${t.accent}">✅ All themes unlocked! Thank you!</div>
-          </div>`}
           <div style="display:flex;flex-direction:column;gap:8px">${themeButtons}</div>
         </div>
         <div class="settings-card" style="background:${t.btnBg};border-color:${t.btnBorder};font-size:0.95rem;line-height:1.7">
@@ -853,24 +760,14 @@ function bindSettingsEvents() {
   document.querySelectorAll(".theme-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const key = btn.dataset.theme;
-      if (PREMIUM_THEMES.includes(key) && !state.isPremium) {
         // Show upgrade prompt
         vibrate(50);
         showStatus("Unlock premium to use this theme!");
         // Scroll to unlock button
-        document.getElementById("unlockBtn")?.scrollIntoView({ behavior: "smooth" });
         return;
       }
       vibrate(); state.themeKey = key; savePrefs(); render();
     });
-  });
-
-  document.getElementById("unlockBtn")?.addEventListener("click", () => {
-    purchasePremium();
-  });
-
-  document.getElementById("restoreBtn")?.addEventListener("click", () => {
-    restorePurchase();
   });
 }
 
