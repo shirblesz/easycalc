@@ -85,6 +85,23 @@
       50% { box-shadow: 0 0 0 10px rgba(0,200,83,0.15); }
       100% { box-shadow: 0 0 0 0 rgba(0,200,83,0.5); }
     }
+
+    /* Landscape mode fixes */
+    @media (orientation: landscape) and (max-height: 500px) {
+      body { overflow-y: auto; }
+      #app { height: auto; min-height: 100vh; }
+      .calc-main { height: auto; min-height: 100vh; }
+      .display-wrap { min-height: 70px; margin: 6px 10px; padding: 10px 16px; }
+      .input-bar { padding: 0 10px 2px; }
+      .help-toggle { padding: 0 10px 1px; }
+      .btn-grid { gap: 5px; padding: 4px 10px 8px; }
+      .btn-row { gap: 5px; }
+      .calc-btn { min-height: 44px !important; font-size: 1.1rem !important; }
+      .header { padding: 6px 12px; }
+      .header h1 { font-size: 1.1rem; }
+      .mic-btn { min-height: 44px !important; }
+      .footer { padding: 4px; font-size: 0.65rem; }
+    }
   </style>
 </head>
 <body>
