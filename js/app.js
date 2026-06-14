@@ -76,19 +76,19 @@ const BUTTON_LABELS = {
 };
 
 const VOICE_MAP = {
-  zero:"0",one:"1",two:"2",three:"3",four:"4",five:"5",six:"6",seven:"7",eight:"8",nine:"9",
-  ten:"10",eleven:"11",twelve:"12",thirteen:"13",fourteen:"14",fifteen:"15",sixteen:"16",
-  seventeen:"17",eighteen:"18",nineteen:"19",twenty:"20",thirty:"30",forty:"40",fifty:"50",
-  sixty:"60",seventy:"70",eighty:"80",ninety:"90",hundred:"100",thousand:"1000",
-  plus:"+",add:"+",and:"+",minus:"-",subtract:"-",
-  times:"×",multiply:"×",multiplied:"×",divide:"÷",divided:"÷",over:"÷",
-  equals:"=",equal:"=",result:"=",answer:"=",clear:"C",reset:"C",delete:"C",
-  backspace:"⌫",back:"⌫",undo:"⌫",point:".",dot:".",decimal:".",
-  percent:"%",percentage:"%",
+  zero: "0", one: "1", two: "2", three: "3", four: "4", five: "5", six: "6", seven: "7", eight: "8", nine: "9",
+  ten: "10", eleven: "11", twelve: "12", thirteen: "13", fourteen: "14", fifteen: "15", sixteen: "16",
+  seventeen: "17", eighteen: "18", nineteen: "19", twenty: "20", thirty: "30", forty: "40", fifty: "50",
+  sixty: "60", seventy: "70", eighty: "80", ninety: "90", hundred: "100", thousand: "1000",
+  plus: "+", add: "+", and: "+", minus: "-", subtract: "-",
+  times: "×", multiply: "×", multiplied: "×", divide: "÷", divided: "÷", over: "÷",
+  equals: "=", equal: "=", result: "=", answer: "=", clear: "C", reset: "C", delete: "C",
+  backspace: "⌫", back: "⌫", undo: "⌫", point: ".", dot: ".", decimal: ".",
+  percent: "%", percentage: "%",
 };
 
-const COMPOUND_TENS = { twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90 };
-const SINGLE_DIGITS = { one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9 };
+const COMPOUND_TENS = { twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
+const SINGLE_DIGITS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9 };
 
 function parseTokens(raw) {
   // Normalize all possible operator characters to standard ones FIRST
@@ -106,7 +106,7 @@ function parseTokens(raw) {
     .replace(/([0-9.])([x+\-*/=])/g, "$1 $2 ")
     .replace(/([x+\-*/=])([0-9.])/g, " $1 $2")
     .replace(/(%)/g, " $1 ");
-  
+
   const words = processed.split(/[\s,]+/).filter(w => w.length > 0);
   const tokens = [];
   for (let i = 0; i < words.length; i++) {
@@ -186,7 +186,7 @@ function parseTokens(raw) {
       if (SINGLE_DIGITS[next]) { tokens.push(String(COMPOUND_TENS[word] + SINGLE_DIGITS[next])); i++; continue; }
     }
     if (/^\d+%$/.test(word)) { tokens.push(word.replace("%", "")); tokens.push("%"); continue; }
-    if (["by","the","is","what","whats","what's","calculate","please","can","you","of","off"].includes(word)) continue;
+    if (["by", "the", "is", "what", "whats", "what's", "calculate", "please", "can", "you", "of", "off"].includes(word)) continue;
     if (VOICE_MAP[word]) { tokens.push(VOICE_MAP[word]); continue; }
     if (/^\d+\.?\d*$/.test(word)) { tokens.push(word); continue; }
   }
@@ -221,7 +221,7 @@ try {
     state.vibrationEnabled = saved.vibrationEnabled ?? state.vibrationEnabled;
     state.themeKey = saved.themeKey ?? state.themeKey;
   }
-} catch(e) {}
+} catch (e) { }
 
 function savePrefs() {
   try {
@@ -229,7 +229,7 @@ function savePrefs() {
       fontSize: state.fontSize, voiceEnabled: state.voiceEnabled,
       vibrationEnabled: state.vibrationEnabled, themeKey: state.themeKey,
     }));
-  } catch(e) {}
+  } catch (e) { }
 }
 
 // ===== HELPERS =====
@@ -278,7 +278,7 @@ function speakResult(resultStr) {
 
 function calculate(a, b, op) {
   const x = parseFloat(a), y = parseFloat(b);
-  switch(op) {
+  switch (op) {
     case "+": return x + y;
     case "-": return x - y;
     case "×": return x * y;
@@ -387,7 +387,7 @@ function handlePercent() {
 
 function handlePress(label) {
   if ("0123456789.".includes(label)) handleNumber(label);
-  else if (["+","-","×","÷"].includes(label)) handleOperator(label);
+  else if (["+", "-", "×", "÷"].includes(label)) handleOperator(label);
   else if (label === "=") handleEquals();
   else if (label === "C") handleClear();
   else if (label === "⌫") handleBackspace();
@@ -402,13 +402,13 @@ function processNaturalInput(raw) {
     showStatus('Try: "25 plus 30" or "25 + 30"');
     return;
   }
-  const hasOp = tokens.some(t => ["+","-","×","÷"].includes(t));
+  const hasOp = tokens.some(t => ["+", "-", "×", "÷"].includes(t));
   const last = tokens[tokens.length - 1];
   const endsWithNumber = /^-?\d+\.?\d*$/.test(last);
   const endsWithPercent = last === "%";
   if (hasOp && (endsWithNumber || endsWithPercent) && !tokens.includes("=")) tokens.push("=");
 
-  const startsWithOp = ["+","-","×","÷"].includes(tokens[0]);
+  const startsWithOp = ["+", "-", "×", "÷"].includes(tokens[0]);
   if (!startsWithOp) {
     state.display = "0"; state.prevValue = null; state.operator = null;
     state.resetNext = false; state.history = "";
@@ -423,14 +423,14 @@ function processNaturalInput(raw) {
       if (isSingleDigit) {
         if (state.resetNext) { state.resetNext = false; state.display = token === "." ? "0." : token; }
         else if (state.display === "0" && token !== ".") state.display = token;
-        else if (token === "." && state.display.includes(".")) {}
+        else if (token === "." && state.display.includes(".")) { }
         else state.display += token;
       } else {
         if (state.resetNext) { state.resetNext = false; state.display = token; }
         else state.display = state.display === "0" ? token : state.display + token;
       }
     }
-    else if (["+","-","×","÷"].includes(token)) {
+    else if (["+", "-", "×", "÷"].includes(token)) {
       if (state.prevValue !== null && !state.resetNext) {
         const r = formatResult(calculate(state.prevValue, state.display, state.operator));
         state.display = r; state.prevValue = r; state.history = `${r} ${token}`;
@@ -495,7 +495,7 @@ function toggleListening() {
   } else {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     try { recognition.start(); state.isListening = true; state.voiceStatus = "Listening..."; }
-    catch(e) { showStatus("Mic busy, type instead"); }
+    catch (e) { showStatus("Mic busy, type instead"); }
   }
   render();
 }
@@ -528,13 +528,13 @@ function renderCalc(t, fs, mh) {
   else if (len > 10) displayFs = fs.display * 0.6;
   else if (len > 8) displayFs = fs.display * 0.75;
   else displayFs = fs.display;
-  const buttons = [["C","±","%","÷"],["7","8","9","×"],["4","5","6","-"],["1","2","3","+"],["⌫","0",".","="]];
+  const buttons = [["C", "±", "%", "÷"], ["7", "8", "9", "×"], ["4", "5", "6", "-"], ["1", "2", "3", "+"], ["⌫", "0", ".", "="]];
 
   let btnHtml = buttons.map(row =>
     `<div class="btn-row">${row.map(label => {
       let bg = t.btnBg, fg = t.btnText, border = t.btnBorder;
       if (label === "C") { bg = t.clearBg; fg = t.clearText; border = t.clearBg; }
-      else if (["+","-","×","÷"].includes(label)) { bg = t.operatorBg; fg = t.operatorText; border = t.operatorBg; }
+      else if (["+", "-", "×", "÷"].includes(label)) { bg = t.operatorBg; fg = t.operatorText; border = t.operatorBg; }
       else if (label === "=") { bg = t.equalsBg; fg = t.equalsText; border = t.equalsBg; }
       return `<button class="calc-btn" data-label="${label}" aria-label="${BUTTON_LABELS[label] || label}"
         style="background:${bg};color:${fg};border-color:${border};font-size:${fs.btn}rem;min-height:${mh}px">${label}</button>`;
@@ -617,7 +617,7 @@ function renderSettings(t, fs) {
   return `
     <div class="settings show" style="background:${t.settingsBg};color:${t.headerText}">
       <div class="settings-header" style="background:${t.headerBg};border-color:${t.btnBorder}">
-        <button id="backBtn" style="border-color:${t.btnBorder};color:${t.headerText}">← Back</button>
+        <button id="backBtn" style="border-color:${t.btnBorder};color:${t.headerText}"><span style="font-size:1.1em;line-height:1">←</span> Back</button>
         <h1>⚙️ Settings</h1>
       </div>
       <div class="settings-body">
@@ -684,7 +684,7 @@ function renderSettings(t, fs) {
     </div>`;
 }
 
-function escHtml(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function escHtml(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
 
 // ===== EVENT BINDING =====
 function bindCalcEvents() {
@@ -764,7 +764,7 @@ document.addEventListener("keydown", (e) => {
   if (state.showSettings) return;
   const input = document.getElementById("textInput");
   if (document.activeElement === input) return;
-  const map = { Enter:"=","=":"=",Escape:"C",Delete:"C",Backspace:"⌫","+":"+","-":"-","*":"×","/":"÷" };
+  const map = { Enter: "=", "=": "=", Escape: "C", Delete: "C", Backspace: "⌫", "+": "+", "-": "-", "*": "×", "/": "÷" };
   if ("0123456789.".includes(e.key)) { e.preventDefault(); handlePress(e.key); }
   else if (map[e.key]) { e.preventDefault(); handlePress(map[e.key]); }
 });
@@ -775,5 +775,5 @@ render();
 
 // Register service worker
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js").catch(() => {});
+  navigator.serviceWorker.register("/sw.js").catch(() => { });
 }
