@@ -1,4 +1,4 @@
-# 🧮 EasyCalc
+# 🎙️ TalkCalc
 
 **Calculator for Everyone** — simple, accessible, and beautiful.
 
