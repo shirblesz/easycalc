@@ -1,6 +1,6 @@
 {
   "name": "TalkCalc - Voice Calculator for Everyone",
-  "short_name": "EasyCalc",
+  "short_name": "TalkCalc",
   "description": "Accessible calculator with voice input, large buttons, and customizable themes. Designed for everyone.",
   "start_url": "/index.html",
   "display": "standalone",
