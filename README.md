@@ -2,9 +2,9 @@
 
 **Calculator for Everyone** — simple, accessible, and beautiful.
 
-## What is EasyCalc?
+## What is TalkCalc?
 
-EasyCalc is a calculator designed to be truly easy to use. Big buttons, voice input, and a clear display — whether you're 8 or 80, EasyCalc just works.
+TalkCalc is a calculator designed to be truly easy to use. Big buttons, voice input, and a clear display — whether you're 8 or 80, TalkCalc just works.
 
 ## ✨ Features
 
@@ -32,7 +32,7 @@ Visit the live app: [EasyCalc](https://shirlyyeane.github.io/easycalc/)
 
 Speak or type naturally:
 
-| You say / type | EasyCalc does |
+| You say / type | TalkCalc does |
 |---|---|
 | "25 plus 30" | 25 + 30 = 55 |
 | "twelve times four" | 12 × 4 = 48 |
