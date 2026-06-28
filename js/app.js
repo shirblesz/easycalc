@@ -551,7 +551,7 @@ function renderCalc(t, fs, mh) {
   return `
     <div class="calc-main" style="background:${t.bg}">
       <div class="header" style="background:${t.headerBg};border-color:${t.btnBorder}">
-        <h1 style="color:${t.headerText}">🧮 TalkCalc</h1>
+        <h1 style="color:${t.headerText}">🎙️ TalkCalc</h1>
         <button id="settingsBtn" style="background:${t.btnBg};border-color:${t.btnBorder};color:${t.headerText}">⚙️</button>
       </div>
       <div class="display-wrap" style="background:${t.displayBg};border-color:${t.btnBorder}">
